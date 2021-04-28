@@ -1,52 +1,55 @@
-const fs = require('fs')
+const fs = require('fs').promises
 const path = require('path')
+const shortId = require('shortid');
 
-// const contactsPath = path.resolve('db')
 const contactsPath = path.resolve('db/contacts.json')
 
-const rewriteFile = data => {
-  try {
-    fs.writeFileSync(contactsPath, JSON.stringify(data))
-  }
-  catch (err) {
-    console.log(err)
-  }
+
+const onErr = err => {
+  console.log(err)
+  process.exit(1)
 }
 
 // TODO: задокументировать каждую функцию
-function listContacts() {
-  let contacts;
-
-  try {
-    contacts = fs.readFileSync(contactsPath)
+async function listContacts() {
+  // console.log(contactsPath)
+  try {    
+    const data = await fs.readFile(contactsPath)
+    // console.log(JSON.parse(data))
+    return JSON.parse(data)
+  } catch (err) {
+    onErr(err)
   }
-  catch (err){
-    console.log(err)
-  }
-
-  return JSON.parse(contacts)
 }
 
-function getContactById(contactId) {
-  return listContacts().find(({id}) => id === Number(contactId))
+listContacts()
+
+async function getContactById(contactId) {
+  const contacts = await listContacts()
+  return contacts.find(({id}) => id === Number(contactId))
 }
 
 async function removeContact(contactId) {
-  const contacts = listContacts().filter(({id}) => id !== Number(contactId))
-  await rewriteFile(contacts)
+  try {
+    const contacts = await listContacts()
+    const newList = contacts.filter(({ id }) => id !== Number(contactId))
+    await fs.writeFile(contactsPath, JSON.stringify(newList))
+  } catch (err) {
+    onErr(err)
+  }  
 }
 
-function addContact(name, email, phone) {
-  const contacts = listContacts()
+async function addContact(name, email, phone) {
+  const contacts = await listContacts()
 
   const contact = {
-    id: contacts[contacts.length - 1].id + 1,
+    id: shortId(),
     name,
     email,
     phone
   }
 
-  rewriteFile([...contacts, contact])
+  await fs.writeFile(contactsPath, JSON.stringify([...contacts, contact]))
 }
 
 module.exports = {

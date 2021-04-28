@@ -14,25 +14,26 @@ program.parse(process.argv)
 const argv = program.opts()
 
 // TODO: рефакторить
-function invokeAction({ action, id, name, email, phone }) {
+async function invokeAction({ action, id, name, email, phone }) {
   switch (action) {
     case 'list':
-      console.log(listContacts())
+      console.log(await listContacts())
       break
 
     case 'get':
-      const tmp = listContacts().find(contact => contact.id.toString() === id)  
-      console.log(tmp)
+      const contacts = await listContacts()
+      const contact = contacts.find(contact => contact.id.toString() === id)  
+      console.log(contact)
       break
 
     case 'add':
-      addContact(name, email, phone)
-      console.log(listContacts())
+      await addContact(name, email, phone)
+      console.log(await listContacts())
       break
 
     case 'remove':
-      removeContact(id)
-      console.log(listContacts())
+      await removeContact(id)
+      console.log(await listContacts())
       break
 
     default:
